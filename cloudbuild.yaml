@@ -1,0 +1,30 @@
+# Cloud Build configuration for Cloud Run deployment
+# This file is used when deploying via GitHub
+
+steps:
+  # Install dependencies
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['install']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'suggestions-reviewer'
+      - '--source'
+      - '.'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '7007'
+
+# Timeout for the entire build
+timeout: '1200s'
+
+# Images to be pushed to Container Registry (if needed)
+# images:
+#   - 'gcr.io/$PROJECT_ID/suggestions-reviewer'

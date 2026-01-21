@@ -1,0 +1,19 @@
+# Files to ignore when deploying to GCP
+node_modules/
+.git/
+.gitignore
+*.log
+.DS_Store
+.env
+originalSuggestions_backup.json
+README.md
+README-BACKEND.md
+GUIA-DEPLOY-GCP.md
+DEPLOY-GCP.md
+DEPLOY-GITHUB.md
+start.sh
+start-server.sh
+deploy.sh
+server-example.js
+Dockerfile
+.dockerignore

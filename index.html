@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggestions Review</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --accent: #4a9eff;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --low: #2196f3;
+            --medium: #ffc107;
+            --high: #ff9800;
+            --critical: #f44336;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .counters {
+            display: flex;
+            gap: 20px;
+        }
+
+        .counter {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .counter-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .counter-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .counter.pending .counter-value {
+            color: var(--warning);
+        }
+
+        .counter.approved .counter-value {
+            color: var(--success);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .file-input-label:hover {
+            opacity: 0.9;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .export-btn {
+            padding: 10px 20px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        .export-btn:hover {
+            opacity: 0.9;
+        }
+
+        .save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .save-indicator.saving {
+            color: var(--warning);
+        }
+
+        .save-indicator.saved {
+            color: var(--success);
+        }
+
+        .save-indicator.error {
+            color: var(--error);
+        }
+
+        .save-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--warning);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .suggestion-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            transition: border-color 0.2s;
+        }
+
+        .suggestion-card.reviewed {
+            border-color: var(--success);
+            border-width: 2px;
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .labels {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.label {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .badge.severity {
+            color: white;
+        }
+
+        .badge.severity.low {
+            background: var(--low);
+        }
+
+        .badge.severity.medium {
+            background: var(--medium);
+        }
+
+        .badge.severity.high {
+            background: var(--high);
+        }
+
+        .badge.severity.critical {
+            background: var(--critical);
+        }
+
+        .review-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .review-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .review-btn.approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .review-btn.approve:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        .review-btn.approve:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .review-btn.reset {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .review-btn.reset:hover {
+            background: var(--bg-primary);
+        }
+
+        .severity-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .severity-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .severity-select:not(:disabled):hover {
+            border-color: var(--accent);
+        }
+
+        .check-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: var(--success);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .check-icon::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .suggestion-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .suggestion-content {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .code-comparison {
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--bg-primary);
+            max-width: 100%;
+        }
+
+        .code-comparison-header {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .code-header-left,
+        .code-header-right {
+            flex: 1;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 0;
+        }
+
+        .code-header-left {
+            border-right: 1px solid var(--border-color);
+            color: #ff9999;
+        }
+
+        .code-header-right {
+            color: #99ff99;
+        }
+
+        .diff-view {
+            background: var(--bg-primary);
+            overflow-x: auto;
+            overflow-y: visible;
+            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .diff-view::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .diff-view::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        .diff-view::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        .diff-view::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Fallback styles */
+        .code-side {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .code-side-header {
+            padding: 10px 15px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .code-side-content {
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 968px) {
+            .diff-view > div {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Custom diff styles - clean and high contrast */
+        .diff-view {
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .custom-diff-container {
+            display: flex;
+            width: 100%;
+            min-width: 800px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .diff-side {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+        }
+
+        .diff-side.diff-left {
+            border-right: 2px solid var(--border-color);
+        }
+
+        .diff-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .diff-table tr {
+            border: none;
+        }
+
+        .diff-table .line-num {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid var(--border-color);
+            min-width: 50px;
+            width: 50px;
+            font-size: 12px;
+        }
+
+        .diff-table .line-content {
+            padding: 4px 15px;
+            white-space: pre;
+            word-break: normal;
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .diff-table .line-content code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* Removed lines - HIGH CONTRAST */
+        .line-removed {
+            background: #3d1f1f !important;
+        }
+
+        .line-removed .line-num {
+            background: #4d2a2a !important;
+            color: #ff9999 !important;
+            border-right-color: #5d3a3a !important;
+        }
+
+        .line-removed .line-content {
+            background: #3d1f1f !important;
+            color: #ffcccc !important;
+        }
+
+        /* Added lines - HIGH CONTRAST */
+        .line-added {
+            background: #1f3d1f !important;
+        }
+
+        .line-added .line-num {
+            background: #2a4d2a !important;
+            color: #99ff99 !important;
+            border-right-color: #3a5d3a !important;
+        }
+
+        .line-added .line-content {
+            background: #1f3d1f !important;
+            color: #ccffcc !important;
+        }
+
+        /* Unchanged lines */
+        .line-unchanged {
+            background: var(--bg-secondary);
+        }
+
+        .line-unchanged .line-content {
+            color: var(--text-primary);
+        }
+
+        /* Empty lines (spacers) */
+        .line-empty {
+            background: var(--bg-tertiary);
+            min-height: 20px;
+        }
+
+        .line-empty .line-num,
+        .line-empty .line-content {
+            background: var(--bg-tertiary);
+        }
+
+
+        @media (max-width: 968px) {
+            .code-comparison-header {
+                flex-direction: column;
+            }
+            
+            .code-header-left {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .custom-diff-container {
+                flex-direction: column;
+                min-width: 100%;
+            }
+
+            .diff-side.diff-left {
+                border-right: none;
+                border-bottom: 2px solid var(--border-color);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h2 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Suggestions Review</h1>
+            <div class="header-controls">
+                <div class="counters">
+                    <div class="counter pending">
+                        <div class="counter-label">Pending</div>
+                        <div class="counter-value" id="pending-count">0</div>
+                    </div>
+                    <div class="counter approved">
+                        <div class="counter-label">Reviewed</div>
+                        <div class="counter-value" id="reviewed-count">0</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div class="save-indicator" id="save-indicator">
+                        <span id="save-status"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="suggestions-container" class="suggestions-list">
+            <div class="empty-state">
+                <h2>Nenhuma sugestão carregada</h2>
+                <p>Carregue um arquivo JSON para começar a revisão</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <script>
+        let originalData = [];
+        let suggestionsData = [];
+        const STORAGE_KEY = 'suggestions_reviews';
+        
+        // ============================================
+        // API CONFIGURATION
+        // ============================================
+        // Auto-detect API endpoint based on current location
+        // If running on same server, uses relative path
+        // Otherwise, configure manually or leave empty for localStorage only
+        const API_ENDPOINT = window.location.origin + '/api/save';
+        
+        let isSaving = false;
+        let saveTimeout = null;
+
+        // Load data from localStorage on startup
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.originalData && parsed.reviews) {
+                        originalData = parsed.originalData;
+                        applyReviews(parsed.reviews);
+                        renderSuggestions();
+                    }
+                } catch (e) {
+                    console.error('Error loading from localStorage:', e);
+                }
+            }
+        }
+
+        // Apply reviews to original data
+        function applyReviews(reviews) {
+            suggestionsData = originalData.map(suggestion => {
+                const review = reviews[suggestion.id];
+                if (review) {
+                    return { ...suggestion, ...review };
+                }
+                return suggestion;
+            });
+        }
+
+        // Prepare full data to save
+        function prepareFullData() {
+            return suggestionsData.map(suggestion => {
+                const { reviewStatus, newSeverity, reviewedAt, reviewedBy, ...original } = suggestion;
+                if (reviewStatus) {
+                    return {
+                        ...original,
+                        reviewStatus,
+                        ...(newSeverity && { newSeverity }),
+                        reviewedAt,
+                        reviewedBy
+                    };
+                }
+                return original;
+            });
+        }
+
+        // Update save indicator
+        function updateSaveIndicator(status, message) {
+            const indicator = document.getElementById('save-indicator');
+            const statusText = document.getElementById('save-status');
+            
+            indicator.className = 'save-indicator';
+            statusText.textContent = message;
+            
+            if (status === 'saving') {
+                indicator.classList.add('saving');
+                statusText.innerHTML = '<span class="save-spinner"></span> Saving...';
+            } else if (status === 'saved') {
+                indicator.classList.add('saved');
+                statusText.textContent = '✓ Saved';
+                setTimeout(() => {
+                    if (indicator.classList.contains('saved')) {
+                        statusText.textContent = 'Ready';
+                        indicator.classList.remove('saved');
+                    }
+                }, 2000);
+            } else if (status === 'error') {
+                indicator.classList.add('error');
+                statusText.textContent = '✗ Error saving';
+                setTimeout(() => {
+                    if (indicator.classList.contains('error')) {
+                        statusText.textContent = 'Ready';
+                        indicator.classList.remove('error');
+                    }
+                }, 3000);
+            }
+        }
+
+        // Save to server via API
+        async function saveToServer() {
+            if (!API_ENDPOINT) {
+                return false; // No API configured
+            }
+
+            try {
+                const fullData = prepareFullData();
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        data: fullData,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error saving to server:', error);
+                return false;
+            }
+        }
+
+        // Save to localStorage
+        function saveToLocalStorage() {
+            const reviews = {};
+            suggestionsData.forEach(suggestion => {
+                if (suggestion.reviewStatus) {
+                    reviews[suggestion.id] = {
+                        reviewStatus: suggestion.reviewStatus,
+                        newSeverity: suggestion.newSeverity || null,
+                        reviewedAt: suggestion.reviewedAt || null,
+                        reviewedBy: suggestion.reviewedBy || null
+                    };
+                }
+            });
+
+            const dataToSave = {
+                originalData: originalData,
+                reviews: reviews,
+                savedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        }
+
+        // Save (tries server first, then localStorage)
+        async function saveToStorage() {
+            if (isSaving) return;
+            
+            isSaving = true;
+            updateSaveIndicator('saving', 'Saving...');
+
+            // Clear previous timeout if exists
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+
+            try {
+                // Try to save to server
+                const savedToServer = await saveToServer();
+                
+                // Always save to localStorage as well (backup)
+                saveToLocalStorage();
+
+                if (savedToServer) {
+                    updateSaveIndicator('saved', 'Saved');
+                } else {
+                    // If no API configured, save only to localStorage
+                    updateSaveIndicator('saved', 'Saved (local)');
+                }
+            } catch (error) {
+                // On error, save to localStorage anyway
+                saveToLocalStorage();
+                updateSaveIndicator('error', 'Error saving');
+            } finally {
+                isSaving = false;
+            }
+        }
+
+        // Save with debounce (waits 500ms after last change)
+        function saveWithDebounce() {
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+            
+            saveTimeout = setTimeout(() => {
+                saveToStorage();
+            }, 500);
+        }
+
+        // Try to automatically load JSON from the same directory
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('originalSuggestions.json')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('File not found');
+                })
+                .then(data => {
+                    originalData = data;
+                    loadFromStorage();
+                    if (!localStorage.getItem(STORAGE_KEY)) {
+                        suggestionsData = [...data];
+                        renderSuggestions();
+                    }
+                })
+                .catch(() => {
+                    // If not found, try to load from localStorage
+                    loadFromStorage();
+                });
+        });
+
+        // Approve suggestion
+        function approveSuggestion(id) {
+            const suggestion = suggestionsData.find(s => s.id === id);
+            if (suggestion) {
+                suggestion.reviewStatus = 'approved';
+                suggestion.reviewedAt = new Date().toISOString();
+                suggestion.reviewedBy = null;
+                delete suggestion.newSeverity;
+                renderSuggestions();
+                saveWithDebounce(); // Auto-save with debounce
+            }
+        }
+
+        // Reclassify suggestion
+        function reclassifySuggestion(id, newSeverity) {
+            if (!newSeverity) return; // Do nothing if value is empty
+            const suggestion = suggestionsData.find(s => s.id === id);
+            if (suggestion) {
+                suggestion.reviewStatus = 'reclassified';
+                suggestion.newSeverity = newSeverity;
+                suggestion.reviewedAt = new Date().toISOString();
+                suggestion.reviewedBy = null;
+                renderSuggestions();
+                saveWithDebounce(); // Auto-save with debounce
+            }
+        }
+
+        // Reset suggestion
+        function resetSuggestion(id) {
+            const suggestion = suggestionsData.find(s => s.id === id);
+            if (suggestion) {
+                delete suggestion.reviewStatus;
+                delete suggestion.newSeverity;
+                delete suggestion.reviewedAt;
+                delete suggestion.reviewedBy;
+                renderSuggestions();
+                saveWithDebounce(); // Auto-save with debounce
+            }
+        }
+
+        // Clean code from markdown code blocks
+        function cleanCode(code) {
+            if (!code) return '';
+            // Remove ```language e ``` se presentes
+            return code.replace(/```[\w]*\n?/g, '').replace(/```/g, '').trim();
+        }
+
+        // Update counters
+        function updateCounters() {
+            const pending = suggestionsData.filter(s => !s.reviewStatus).length;
+            const reviewed = suggestionsData.filter(s => s.reviewStatus === 'approved' || s.reviewStatus === 'reclassified').length;
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('reviewed-count').textContent = reviewed;
+        }
+
+        // Render suggestions
+        function renderSuggestions() {
+            const container = document.getElementById('suggestions-container');
+            
+            if (suggestionsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No suggestions loaded</h2>
+                        <p>Load a JSON file to start reviewing</p>
+                    </div>
+                `;
+                updateCounters();
+                return;
+            }
+
+            container.innerHTML = suggestionsData.map(suggestion => {
+                const isReviewed = !!suggestion.reviewStatus;
+                const isApproved = suggestion.reviewStatus === 'approved';
+                const isReclassified = suggestion.reviewStatus === 'reclassified';
+                const currentSeverity = suggestion.newSeverity || suggestion.severity;
+
+                // Detect code language (simple attempt)
+                const detectLanguage = (code) => {
+                    if (!code) return 'text';
+                    if (code.includes('```bash') || code.includes('```sh')) return 'bash';
+                    if (code.includes('```go')) return 'go';
+                    if (code.includes('```js') || code.includes('```javascript')) return 'javascript';
+                    if (code.includes('```ts') || code.includes('```typescript')) return 'typescript';
+                    if (code.includes('```css')) return 'css';
+                    if (code.includes('```html')) return 'html';
+                    if (code.includes('```json')) return 'json';
+                    if (code.includes('```python')) return 'python';
+                    if (code.includes('```')) return 'text';
+                    return 'text';
+                };
+
+                const existingCodeClean = cleanCode(suggestion.existingCode || '');
+                const improvedCodeClean = cleanCode(suggestion.improvedCode || '');
+
+                return `
+                    <div class="suggestion-card ${isReviewed ? 'reviewed' : ''}" data-id="${suggestion.id}">
+                        <div class="suggestion-header">
+                            <div class="labels">
+                                <span class="badge label">${suggestion.label || 'N/A'}</span>
+                                ${isReclassified && suggestion.newSeverity ? 
+                                    `<span class="badge severity ${suggestion.newSeverity}">${suggestion.newSeverity} (reclassified)</span>` :
+                                    `<span class="badge severity ${currentSeverity}">${currentSeverity || 'N/A'}</span>`
+                                }
+                            </div>
+                            <div class="review-controls">
+                                ${isReviewed ? '<span class="check-icon"></span>' : ''}
+                                <button 
+                                    class="review-btn approve" 
+                                    onclick="approveSuggestion('${suggestion.id}')"
+                                    ${isReclassified ? 'disabled' : ''}
+                                >
+                                    Approve
+                                </button>
+                                <select 
+                                    class="severity-select" 
+                                    onchange="reclassifySuggestion('${suggestion.id}', this.value)"
+                                    ${isApproved ? 'disabled' : ''}
+                                    ${isReclassified && suggestion.newSeverity ? `value="${suggestion.newSeverity}"` : ''}
+                                >
+                                    <option value="">Reclassify</option>
+                                    <option value="low" ${suggestion.newSeverity === 'low' ? 'selected' : ''}>Low</option>
+                                    <option value="medium" ${suggestion.newSeverity === 'medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="high" ${suggestion.newSeverity === 'high' ? 'selected' : ''}>High</option>
+                                    <option value="critical" ${suggestion.newSeverity === 'critical' ? 'selected' : ''}>Critical</option>
+                                </select>
+                                ${isReviewed ? `<button class="review-btn reset" onclick="resetSuggestion('${suggestion.id}')">Reset</button>` : ''}
+                            </div>
+                        </div>
+                        <div class="suggestion-meta">
+                            <strong>ID:</strong> ${suggestion.id} | 
+                            <strong>Repository:</strong> ${suggestion.repository_fullName || 'N/A'} | 
+                            <strong>Created at:</strong> ${suggestion.createdAt ? new Date(suggestion.createdAt).toLocaleString('en-US') : 'N/A'} |
+                            <strong>Number:</strong> ${suggestion.number || 'N/A'}
+                        </div>
+                        <div class="suggestion-content">
+                            ${suggestion.suggestionContent || 'No description'}
+                        </div>
+                        ${existingCodeClean || improvedCodeClean ? `
+                            <div class="code-comparison">
+                                <div class="code-comparison-header">
+                                    <div class="code-header-left">Original</div>
+                                    <div class="code-header-right">Suggested</div>
+                                </div>
+                                <div id="diff-container-${suggestion.id}" class="diff-view"></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Render diffs after DOM is updated
+            setTimeout(() => {
+                suggestionsData.forEach(suggestion => {
+                    if (suggestion.existingCode || suggestion.improvedCode) {
+                        const existingCodeClean = cleanCode(suggestion.existingCode || '');
+                        const improvedCodeClean = cleanCode(suggestion.improvedCode || '');
+                        renderDiff(`diff-container-${suggestion.id}`, existingCodeClean, improvedCodeClean);
+                    }
+                });
+            }, 100);
+
+            updateCounters();
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Render beautiful side-by-side diff with custom implementation
+        function renderDiff(containerId, oldCode, newCode) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            try {
+                // Check if diff library is loaded
+                if (typeof Diff === 'undefined') {
+                    console.warn('Diff library not loaded, using fallback');
+                    renderDiffFallback(container, oldCode, newCode);
+                    return;
+                }
+
+                // Split into lines
+                const oldLines = (oldCode || '').split('\n');
+                const newLines = (newCode || '').split('\n');
+
+                // Calculate diff
+                const changes = Diff.diffLines(oldCode || '', newCode || '');
+
+                // Build side-by-side view
+                let oldHtml = '';
+                let newHtml = '';
+                let oldLineNum = 1;
+                let newLineNum = 1;
+
+                changes.forEach(change => {
+                    const lines = change.value.split('\n');
+                    // Remove last empty line from split
+                    if (lines[lines.length - 1] === '') {
+                        lines.pop();
+                    }
+
+                    if (change.removed) {
+                        // Lines removed - show in left column
+                        lines.forEach(line => {
+                            oldHtml += `
+                                <tr class="line-removed">
+                                    <td class="line-num">${oldLineNum++}</td>
+                                    <td class="line-content"><code>${escapeHtml(line)}</code></td>
+                                </tr>
+                            `;
+                        });
+                        // Add empty cells in right column
+                        lines.forEach(() => {
+                            newHtml += `
+                                <tr class="line-empty">
+                                    <td class="line-num"></td>
+                                    <td class="line-content"></td>
+                                </tr>
+                            `;
+                        });
+                    } else if (change.added) {
+                        // Lines added - show in right column
+                        lines.forEach(line => {
+                            newHtml += `
+                                <tr class="line-added">
+                                    <td class="line-num">${newLineNum++}</td>
+                                    <td class="line-content"><code>${escapeHtml(line)}</code></td>
+                                </tr>
+                            `;
+                        });
+                        // Add empty cells in left column
+                        lines.forEach(() => {
+                            oldHtml += `
+                                <tr class="line-empty">
+                                    <td class="line-num"></td>
+                                    <td class="line-content"></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        // Unchanged lines - show in both columns
+                        lines.forEach(line => {
+                            oldHtml += `
+                                <tr class="line-unchanged">
+                                    <td class="line-num">${oldLineNum++}</td>
+                                    <td class="line-content"><code>${escapeHtml(line)}</code></td>
+                                </tr>
+                            `;
+                            newHtml += `
+                                <tr class="line-unchanged">
+                                    <td class="line-num">${newLineNum++}</td>
+                                    <td class="line-content"><code>${escapeHtml(line)}</code></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                });
+
+                container.innerHTML = `
+                    <div class="custom-diff-container">
+                        <div class="diff-side diff-left">
+                            <table class="diff-table">
+                                <tbody>${oldHtml}</tbody>
+                            </table>
+                        </div>
+                        <div class="diff-side diff-right">
+                            <table class="diff-table">
+                                <tbody>${newHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error rendering diff:', error);
+                renderDiffFallback(container, oldCode, newCode);
+            }
+        }
+
+        // Fallback side-by-side rendering if diff2html fails
+        function renderDiffFallback(container, oldCode, newCode) {
+            const oldCodeEscaped = escapeHtml(oldCode || '');
+            const newCodeEscaped = escapeHtml(newCode || '');
+
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%;">
+                    <div class="code-side">
+                        <div class="code-side-header">Existing Code</div>
+                        <div class="code-side-content">${oldCodeEscaped}</div>
+                    </div>
+                    <div class="code-side">
+                        <div class="code-side-header">Improved Code</div>
+                        <div class="code-side-content">${newCodeEscaped}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Make functions global for use in inline event handlers
+        window.approveSuggestion = approveSuggestion;
+        window.reclassifySuggestion = reclassifySuggestion;
+        window.resetSuggestion = resetSuggestion;
+    </script>
+</body>
+</html>

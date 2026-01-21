@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Diff Libraries</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/css/diff2html.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        #status {
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #2d2d2d;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        #diff-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Bibliotecas Diff</h1>
+    <div id="status">
+        <p>Carregando bibliotecas...</p>
+    </div>
+    <div id="diff-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/js/diff2html.min.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        
+        window.addEventListener('load', function() {
+            let status = '<h3>Status das Bibliotecas:</h3>';
+            
+            // Check Diff library
+            if (typeof Diff !== 'undefined') {
+                status += '<p class="success">✓ Diff library carregada</p>';
+                status += '<p>Métodos disponíveis: ' + Object.keys(Diff).join(', ') + '</p>';
+            } else {
+                status += '<p class="error">✗ Diff library NÃO carregada</p>';
+            }
+            
+            // Check Diff2Html library
+            if (typeof Diff2Html !== 'undefined') {
+                status += '<p class="success">✓ Diff2Html library carregada</p>';
+                status += '<p>Métodos disponíveis: ' + Object.keys(Diff2Html).join(', ') + '</p>';
+            } else {
+                status += '<p class="error">✗ Diff2Html library NÃO carregada</p>';
+            }
+            
+            statusEl.innerHTML = status;
+            
+            // Try to render a simple diff
+            if (typeof Diff !== 'undefined' && typeof Diff2Html !== 'undefined') {
+                try {
+                    const oldCode = `function hello() {
+    console.log("Hello World");
+}`;
+                    
+                    const newCode = `function hello(name) {
+    console.log("Hello " + name);
+    return true;
+}`;
+                    
+                    const diff = Diff.createPatch('test.js', oldCode, newCode, 'Original', 'Modificado');
+                    
+                    const diffHtml = Diff2Html.html(diff, {
+                        drawFileList: false,
+                        matching: 'lines',
+                        outputFormat: 'side-by-side',
+                    });
+                    
+                    document.getElementById('diff-container').innerHTML = diffHtml;
+                    
+                    statusEl.innerHTML += '<p class="success">✓ Diff renderizado com sucesso!</p>';
+                } catch (error) {
+                    statusEl.innerHTML += '<p class="error">✗ Erro ao renderizar diff: ' + error.message + '</p>';
+                    console.error('Error:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
